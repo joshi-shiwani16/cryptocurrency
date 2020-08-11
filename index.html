@@ -1,0 +1,169 @@
+<html>
+    <head>
+<!--/CSS styling for the entire webpage*/-->
+        <style>
+/* splitting the page vertically */
+               .split {
+                  height: 100%;
+                  width: 31%;
+                  position: fixed;
+                  z-index: 1;
+                  top: 0;
+                  overflow-x: hidden;
+                    }
+               
+              .left{
+                  left: 0;
+                   }
+              
+              .right{
+                  right: 0;
+                  }
+/*setting the width and opacity of the image*/
+               img { 
+                  width: 100%;
+                  opacity: 0.4;
+                   }
+/*styling the division on the top-right corner of the over the background image on the right section of the webpage*/
+               .topright {
+                 position: absolute;
+                 top: 8px;
+                 left: 16px;
+                 font-size: 25px;
+                 font-weight: bold;
+                 font-family:Helvetica;
+                 }
+/* setting background-color for the svg area of the webpage */
+              .svg_graph {
+                 background-color: antiquewhite;
+                  }
+/* styling the button on the top-left corner of the web page */
+             .buttons{
+                 display:inline-block;
+                 width:50%;
+               }
+/* styling the text section on top of the web page */            
+            .text{
+                font-size:20px;
+                font-family:sans-serif;
+            }
+            
+        </style>
+    </head>
+    <body>
+<!--this section is for giving certain text and a button on the web page -->
+        <div class = "text">Click on the button to divide the cryptocurrencies on the basis of better market value!!</div>
+        <div class = "buttons">
+              <button id = "performance">Performance on the basis of Market Capitalisation</button>
+        </div><br>
+        <div class = "text">Hover on each bubble to know the name of the cryptocurrency and click on it to know more about the right time to invest</div>
+
+<!--JavaScript tag for including the D3 library version 4-->
+         <script src = "https://d3js.org/d3.v4.min.js"> </script>
+
+         <script>
+
+//variables storing the width and height of the svg canvas 
+             var width = 1150
+             var height = 900
+             
+//setting up the svg canvas on the body of the web page 
+             var svg = d3.select("body")
+	                   .append("svg")
+	                   .attr("height",height)
+	                   .attr("width", width)
+                       .attr("class", "svg_graph")
+                       .append("g")
+                       .attr("transform", "translate(0,0)")
+             
+//variable storing the various html webpages to be navigated through when clicking on the respective bubbles            
+             var myPages = {"Bitcoin":"Bitcoin.html", "Bitconnect":"Bitconnect.html", "Dash":"Dash.html", "Ethereum":"Ethereum.html", "Iota":"Iota.html", "Litecoin":"Litecoin.html", "Monero":"Monero.html", "Neo":"Neo.html", "Numeraire":"Numeraire.html", "Omisego":"Omisego.html", "Qtum":"Qtum.html", "Ripple":"Ripple.html", "Stratis":"Stratis.html", "Waves":"Waves.html"}
+
+//variable for setting a range and domain for the size of the bubbles
+             var size = d3.scaleSqrt().domain([1, 14]).range([10, 120])
+
+//variable that stores the name of all the different cryptocurrencies for creating a color pallete for the bubbles in the bubble chart
+             var data = ["Bitcoin","Bitconnect","Dash","Ethereum","Iota","Litecoin","Monero","Neo","Numeraire","Omisego","Qtum","Ripple","Stratis","Waves"]
+
+//variable that stores the color palette for the bubbles of different cryptocurrencies.
+             var myColor = d3.scaleOrdinal().domain(data).range(["#575F8A", "#A7BF37", "#CDCCD5", "#FFFF66", "#407294", "#FFC0CB", "#DBC8AE", "#BADA55", "#40E0D0", "#E0D3ED", "#FDB813", "#666666", "#B6CC88","B5D3E7"]) 
+
+//force simulations for the movement of bubbles into clusters on the basis of their ranks in terms of market capitalisation
+             var forceX = d3.forceX(function(d){
+                 if(d.Rank >7){
+                  return 340
+                 }else {
+                  return 950   
+                 }
+             }).strength(0.05)
+             
+ //forceCollide() is used to avoid the collision of the bubbles           
+             var forceCollide = d3.forceCollide(function(d){
+                 return size(d.Rank)
+             })
+
+//simulations are created to govern the movement of the bubbles
+             var simulation = d3.forceSimulation()
+                  .force("x-axis", d3.forceX(width / 2).strength(0.05)) 
+                  .force("y-axis", d3.forceY(height / 2).strength(0.05))
+                  .force("dont_collide", forceCollide)
+             
+//callback function for forming the bubbles simultaneously             
+             d3.queue()
+               .defer(d3.csv,"final.csv")
+               .await(ready) 
+             
+//sunction for appending the circle elemnts in the svg canvas               
+             function ready(error, d){
+                 
+                 var circles = svg.selectAll(".currency")
+                     .data(d)
+                     .enter().append("circle")
+                     .attr("class", "currency")
+                     .attr("r", function(d){
+                         return size(d.Rank)
+                     })
+                     .attr("fill", function(d){
+                         return myColor(d.Currency_type)
+                     })
+                     .on("click",function(d,i){
+                       var myPage = myPages[d.Currency_type];
+                       location=myPage?myPage:"noPageForCurrency.html" 
+                     })
+                 
+//adding the tooltip to each bubble
+                 circles.append("svg:title")
+                     .text(function(d) { return d.Currency_type})
+                 
+//setting on-click function for the bubbles                 
+                 d3.select("#performance").on("click", function(d){
+                     simulation
+                         .force("x-axis", forceX)
+                         .alphaTarget(0.5)
+                         .restart()
+                 })
+                 
+//setting the clock function for the bubbles to give the x and y coordinates to the circle element                 
+                 simulation.nodes(d)
+                     .on("tick", clock)
+                 
+                 function clock(){
+                     circles
+                        .attr("cx", function(d){
+                             return d.x
+                        })
+                        .attr("cy", function(d){
+                            return d.y
+                        });
+                 }
+            }
+   
+        </script>
+
+<!--giving information to be displayed on the right side of the splitted web page-->
+        <div class="split right">
+            <img src="crypto4.jpg" alt="Cryptocurrency" width="300" height="1000">
+            <div class="topright">A cryptocurrency (or crypto currency) is a digital asset designed to work as a medium of exchange wherein individual coin ownership records are stored in a digital ledger or computerized database using strong cryptography to secure transaction record entries, to control the creation of additional digital coin records, and to verify the transfer of coin ownership.The adjacent bubbles in the bubble chart represent the following different cryptocurrencies with the size of the bubble being proportional to the ranks on the basis of their mean market capitalisation value.<br><br><li>Bitcoin</li><li>Bitconnect</li><li>Dash</li><li>Ethereum</li><li>Iota</li><li>Litecoin</li><li>Monero</li><li>Neo</li><li>Numeraire</li><li>Omisego</li><li>Qtum</li><li>Ripple</li><li>Stratis</li><li>Waves</li></div>
+        </div>
+    </body>
+</html>

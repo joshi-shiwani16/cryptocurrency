@@ -1,0 +1,132 @@
+<html>
+    <head>
+        <style>
+/*CSS styling for the entire web page*/
+            line{
+                stroke: brown;
+                stroke-width:3;
+            }
+            path{
+                stroke:blue;
+                stroke-width: 2px;
+                fill: none;
+            }
+/*splitting the web page vertically*/
+            .split {
+                  height: 100%;
+                  width: 30%;
+                  position: fixed;
+                  z-index: 1;
+                  top: 0;
+                  overflow-x: hidden;
+            }
+            .left{
+                left:0;
+            }
+            .right{
+                right:0;
+            }
+/*giving background-color for the svg canvas*/
+            .svg_graph{
+                 background-color:#BC8F8F;
+                  }
+/*styling the text elements on the web page*/
+            .text{
+                font-family: cursive;
+                font-size: 30px;
+                border:2px solid;
+                border-radius: 12px;
+                color:black;
+            }
+            .text2{
+                font-family: cursive;
+                font-size: 30px;
+                border-style: solid;
+                border-radius: 12px;
+                color:black;
+            }
+            .text3{
+                font-family: cursive;
+                font-size: 30px;
+                border-style: solid;
+                border-radius: 12px;
+                color:black;
+            }
+        </style>
+    
+    </head>
+<body>
+<!--JavaScript tag for including the D3 library version 4-->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script>
+//timeParse() is used as a date constructor from strings
+      var parseDate = d3.timeParse("%Y-%m-%d"); 
+        
+//loading the csv file and getting the date and market capitalisation values in correct format
+      d3.csv("qtum.csv")
+       .row(function(d){return {Date:parseDate(d.Date),Market:Number(d.Market.trim())};})
+        .get(function(d){
+           
+//creating variables for the height, width and margins of the svg canvas of the webpage
+            var margin = {top: 20, right: 20, bottom: 50, left: 70};
+            var height = 800;
+            var width = 1000;
+            
+//getting the minimum and maximum dates and the maximum market capitalisation values. 
+            var maxDate = d3.max(d, function(d){return d.Date;});
+            var minDate = d3.min(d, function(d){return d.Date;});
+            var maxCap = d3.max(d, function(d){return d.Market;});
+            
+//scaleLinear() and scaleTime() were used to construct the respective scales 
+            var y = d3.scaleLinear().domain([0,maxCap]).range([height, 0]);
+            var x = d3.scaleTime().domain([minDate, maxDate]).range([0, width]);
+          
+//the x and y axis postions on the web page were set
+            var yAxis = d3.axisLeft(y);
+            var xAxis = d3.axisBottom(x);
+            
+//adding D3 svg to the body of the web page
+            var svg = d3.select("body").append("svg")
+                        .attr("height", '100%')
+                        .attr("width", '100%')
+                        .attr("class", "svg_graph");
+            
+//create a group element to have the axis and the path together on the webpage
+            var chartGroup = svg.append("g")
+                                .attr('transform','translate(50,50)');
+          
+//using the line() function of D3 for creating the graph 
+            var line = d3.line()
+                            .x(function(d){return x(d.Date);})
+                            .y(function(d){return y(d.Market);});
+            
+//appending the path and the axis on the graph    
+            chartGroup.append('path').attr('d',line(d));
+            chartGroup.append('g').attr('class','x axis').attr('transform','translate(0,' + height + ')').call(xAxis);
+            chartGroup.append('g').attr('class', 'y axis').call(yAxis);
+            
+//appending a title for the graph
+            chartGroup.append("text")
+                .attr("x", (width / 2))             
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")  
+                .style("font-size", "26px") 
+                .style("text-decoration", "underline") 
+                .style("font-family", "cursive")
+                .text("Market Capitalisation vs Date Graph for Qtum from August, 2017 - January, 2018");
+          
+            });
+        
+    </script>
+<!--Adding texts and images on the right portion of the webpage by splitting the creen vertically-->
+    <div class="split right">
+<!--adding the price and circulating supply for bitcoin -->
+<!-- referenced from https://coinmarketcap.com/-->
+        <img src="qtum.png" alt="Qtum" width="550" height="300"><br>
+        <div class = "text">Price per coin = $1.70</div><br>
+        <div class = "text2">Circulating Supply = 96,787,448 QTUM</div><br><br>
+        <div class = "text3">According to the adjacent line chart displaying the normalised market capitalisation for qtum following conclusions can be drawn on the basis of the seasonal trend observed:<br><li>Buying Time: October - Mid-November</li><br><li>Selling Time: Mid-December, January-beginning </li></div>
+        
+    </div>
+</body>
+</html>
